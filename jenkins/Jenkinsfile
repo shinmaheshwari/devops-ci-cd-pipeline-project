@@ -1,0 +1,68 @@
+// Sprint 1: standalone build+push job.
+// Sprint 2-3 will add Terraform + Ansible stages before this.
+// Sprint 4 converges everything into one declarative pipeline
+// (Build -> Infra -> Config -> Deploy -> Monitor).
+
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION   = 'ap-south-1'
+        ECR_REPO     = 'devops-capstone-app'
+        // Fill in after ECR repo is created in Sprint 1, e.g.
+        // 123456789012.dkr.ecr.ap-south-1.amazonaws.com
+        ECR_REGISTRY = '562904760755.dkr.ecr.ap-south-1.amazonaws.com'
+        IMAGE_TAG    = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'local'}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('app') {
+                    sh '''
+                        python3 -m venv .venv
+                        . .venv/bin/activate
+                        pip install --no-cache-dir -r requirements.txt pytest
+                        pytest -q
+                    '''
+                }
+            }
+        }
+
+        stage('Build image') {
+            steps {
+                dir('app') {
+                    sh "docker build -t ${ECR_REPO}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                sh """
+                    aws ecr get-login-password --region ${AWS_REGION} \
+                        | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                    docker tag ${ECR_REPO}:${IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}
+                    docker tag ${ECR_REPO}:${IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:latest
+                    docker push ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}
+                    docker push ${ECR_REGISTRY}/${ECR_REPO}:latest
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pushed ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
+        }
+        failure {
+            echo "Build failed — check Test/Build/Push stage logs above."
+        }
+    }
+}

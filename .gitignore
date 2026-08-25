@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+__pycache__/
+.pytest_cache/
+*.pyc
+
+terraform.tfvars
+.terraform/
+*.tfstate*
