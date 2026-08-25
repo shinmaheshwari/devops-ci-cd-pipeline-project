@@ -14,8 +14,8 @@ FROM python:3.12-slim AS runtime
 RUN useradd --create-home --uid 1000 appuser
 WORKDIR /app
 
-COPY --from=build /opt/venv /opt/venv
-COPY . .
+COPY --from=build --chown=appuser:appuser /opt/venv /opt/venv
+COPY --chown=appuser:appuser . .
 
 ENV PATH="/opt/venv/bin:$PATH" \
     PORT=8080
