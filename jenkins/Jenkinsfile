@@ -1,5 +1,5 @@
-// Sprint 1: standalone build+push job.
-// Sprint 2-3 will add Terraform + Ansible stages before this.
+// Sprint 2: adds Terraform provisioning before build/test/push.
+// Sprint 3 will add an Ansible config stage after Terraform.
 // Sprint 4 converges everything into one declarative pipeline
 // (Build -> Infra -> Config -> Deploy -> Monitor).
 
@@ -9,8 +9,6 @@ pipeline {
     environment {
         AWS_REGION   = 'ap-south-1'
         ECR_REPO     = 'devops-capstone-app'
-        // Fill in after ECR repo is created in Sprint 1, e.g.
-        // 123456789012.dkr.ecr.ap-south-1.amazonaws.com
         ECR_REGISTRY = '562904760755.dkr.ecr.ap-south-1.amazonaws.com'
         IMAGE_TAG    = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'local'}"
     }
@@ -19,6 +17,34 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform init -input=false'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform plan -input=false -out=tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('terraform') {
+                    // -auto-approve is fine here since Plan already ran and
+                    // produced the exact plan file being applied. For a
+                    // stricter setup, add an `input` approval step before
+                    // this instead.
+                    sh 'terraform apply -input=false -auto-approve tfplan'
+                }
             }
         }
 
@@ -59,10 +85,11 @@ pipeline {
 
     post {
         success {
-            echo "Pushed ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
+            echo "Infra applied and pushed ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
         }
         failure {
-            echo "Build failed — check Test/Build/Push stage logs above."
+            echo "Build failed — check the stage logs above."
         }
     }
 }
+
