@@ -34,6 +34,11 @@ variable "node_desired_size" {
   type = number
 }
 
+variable "jenkins_role_arn" {
+  type    = string
+  default = ""
+}
+
 # ---- EKS cluster IAM role ----
 resource "aws_iam_role" "cluster" {
   name = "${var.project_name}-eks-cluster-role"
@@ -123,6 +128,29 @@ resource "aws_eks_node_group" "main" {
     aws_iam_role_policy_attachment.node_cni_policy,
     aws_iam_role_policy_attachment.node_ecr_readonly,
   ]
+}
+
+# Grant Jenkins EC2 role cluster-admin via EKS access entries (API mode).
+resource "aws_eks_access_entry" "jenkins" {
+  count = var.jenkins_role_arn != "" ? 1 : 0
+
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = var.jenkins_role_arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "jenkins_admin" {
+  count = var.jenkins_role_arn != "" ? 1 : 0
+
+  cluster_name  = aws_eks_cluster.main.name
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = var.jenkins_role_arn
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.jenkins]
 }
 
 output "cluster_name" {
