@@ -1,0 +1,59 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - jq
+      - python3-pip
+      - python3-venv
+      - unzip
+    state: present
+    update_cache: true
+
+- name: Install Docker engine packages
+  ansible.builtin.apt:
+    name:
+      - docker.io
+    state: present
+
+- name: Ensure Docker service is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Install AWS CLI v2 (if not already present)
+  ansible.builtin.stat:
+    path: /usr/local/bin/aws
+  register: aws_cli
+
+- name: Download AWS CLI installer
+  ansible.builtin.get_url:
+    url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /tmp/awscliv2.zip
+    mode: "0644"
+  when: not aws_cli.stat.exists
+
+- name: Unpack and install AWS CLI
+  ansible.builtin.shell: |
+    set -euo pipefail
+    unzip -qo /tmp/awscliv2.zip -d /tmp
+    /tmp/aws/install --update
+  args:
+    creates: /usr/local/bin/aws
+  when: not aws_cli.stat.exists
+
+- name: Install kubectl (stable channel)
+  ansible.builtin.get_url:
+    url: https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+  vars:
+    kubectl_version: v1.31.0
+
+- name: Verify kubectl binary
+  ansible.builtin.command: kubectl version --client
+  changed_when: false

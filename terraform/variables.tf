@@ -51,3 +51,9 @@ variable "node_desired_size" {
   type        = number
   default     = 2
 }
+
+variable "jenkins_role_arn" {
+  description = "IAM role ARN for the Jenkins EC2 instance (grants EKS API access)"
+  type        = string
+  default     = "arn:aws:iam::562904760755:role/jenkins-capstone-role"
+}

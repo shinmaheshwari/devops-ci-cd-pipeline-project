@@ -4,7 +4,7 @@ A hands-on capstone building a complete CI/CD pipeline on AWS: containerized app
 Jenkins → Terraform-provisioned EKS → Kubernetes deployment → Prometheus/Grafana
 monitoring, all driven from a single Jenkins pipeline.
 
-**Status:** Sprint 2 of 6 complete. See [Progress](#progress) below.
+**Status:** Sprint 3 in progress (Ansible playbooks added; pending Jenkins pipeline verification). See [Progress](#progress) below.
 
 ## Architecture
 
@@ -86,7 +86,12 @@ itself — so infrastructure changes are driven by the same pipeline as app chan
 
 Full log: [docs/terraform.md](docs/terraform.md)
 
-### 🔲 Sprint 3 — Ansible configuration management
+### 🔄 Sprint 3 — Ansible configuration management
+
+Ansible playbooks configure the Jenkins EC2 host (Docker, kubectl, kubeconfig) and run automatically after the Terraform stages in the pipeline.
+
+Full log: [docs/ansible.md](docs/ansible.md)
+
 ### 🔲 Sprint 4 — CI/CD deploy to EKS
 ### 🔲 Sprint 5 — Prometheus, Grafana, alerting
 ### 🔲 Sprint 6 — Testing, documentation, production readiness

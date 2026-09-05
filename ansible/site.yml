@@ -1,0 +1,39 @@
+---
+# Configures the Jenkins EC2 host after Terraform provisions EKS.
+# Runs on localhost when triggered from the Jenkins pipeline on that host.
+- name: Configure Jenkins CI host
+  hosts: jenkins
+  become: true
+  vars:
+    aws_region: "{{ aws_region | default('ap-south-1') }}"
+    eks_cluster_name: "{{ eks_cluster_name | default('devops-capstone') }}"
+  roles:
+    - common
+    - jenkins
+
+- name: Validate host configuration
+  hosts: jenkins
+  become: true
+  tasks:
+    - name: Check Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Check kubectl client is installed
+      ansible.builtin.command: kubectl version --client
+      register: kubectl_version
+      changed_when: false
+
+    - name: Assert jenkins user is in docker group
+      ansible.builtin.command: groups jenkins
+      register: jenkins_groups
+      changed_when: false
+      failed_when: "'docker' not in jenkins_groups.stdout"
+
+    - name: Show validation summary
+      ansible.builtin.debug:
+        msg:
+          - "{{ docker_version.stdout }}"
+          - "{{ kubectl_version.stdout_lines[0] }}"
+          - "jenkins groups: {{ jenkins_groups.stdout }}"
