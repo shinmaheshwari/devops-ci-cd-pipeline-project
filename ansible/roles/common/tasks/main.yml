@@ -44,6 +44,7 @@
     /tmp/aws/install --update
   args:
     creates: /usr/local/bin/aws
+    executable: /bin/bash
   when: not aws_cli.stat.exists
 
 - name: Install kubectl (stable channel)
