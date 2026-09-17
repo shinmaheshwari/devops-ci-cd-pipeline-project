@@ -1,0 +1,38 @@
+---
+- name: Add jenkins user to docker group
+  ansible.builtin.user:
+    name: jenkins
+    groups: docker
+    append: true
+
+- name: Ensure Jenkins home exists
+  ansible.builtin.file:
+    path: /var/lib/jenkins
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: "0750"
+
+- name: Configure kubeconfig for EKS cluster
+  become_user: jenkins
+  ansible.builtin.command: >
+    aws eks update-kubeconfig
+    --name {{ eks_cluster_name }}
+    --region {{ aws_region }}
+  environment:
+    HOME: /var/lib/jenkins
+  register: kubeconfig_update
+  changed_when: "'Updated context' in kubeconfig_update.stdout or kubeconfig_update.rc == 0"
+
+- name: Verify cluster access from Jenkins user
+  become_user: jenkins
+  ansible.builtin.command: kubectl get nodes
+  environment:
+    HOME: /var/lib/jenkins
+  register: kubectl_nodes
+  changed_when: false
+  failed_when: kubectl_nodes.rc != 0
+
+- name: Show reachable EKS nodes
+  ansible.builtin.debug:
+    var: kubectl_nodes.stdout_lines

@@ -18,4 +18,5 @@ module "eks" {
   node_min_size       = var.node_min_size
   node_max_size       = var.node_max_size
   node_desired_size   = var.node_desired_size
+  jenkins_role_arn    = var.jenkins_role_arn
 }

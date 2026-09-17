@@ -1,6 +1,5 @@
-// Sprint 2: adds Terraform provisioning before build/test/push.
-// Sprint 3 will add an Ansible config stage after Terraform.
-// Sprint 4 converges everything into one declarative pipeline
+// Sprint 3: Terraform -> Ansible -> build/test/push.
+// Sprint 4 adds kubectl deploy to EKS and converges the full pipeline
 // (Build -> Infra -> Config -> Deploy -> Monitor).
 
 pipeline {
@@ -44,6 +43,28 @@ pipeline {
                     // stricter setup, add an `input` approval step before
                     // this instead.
                     sh 'terraform apply -input=false -auto-approve tfplan'
+                }
+            }
+        }
+
+        stage('Ansible Configure') {
+            steps {
+                dir('terraform') {
+                    script {
+                        env.EKS_CLUSTER_NAME = sh(
+                            returnStdout: true,
+                            script: 'terraform output -raw eks_cluster_name'
+                        ).trim()
+                    }
+                }
+                dir('ansible') {
+                    sh """
+                        sudo apt-get update -qq
+                        sudo apt-get install -y ansible
+                        ANSIBLE_ROLES_PATH=roles ansible-playbook site.yml \
+                            -e aws_region=${AWS_REGION} \
+                            -e eks_cluster_name=${EKS_CLUSTER_NAME}
+                    """
                 }
             }
         }
