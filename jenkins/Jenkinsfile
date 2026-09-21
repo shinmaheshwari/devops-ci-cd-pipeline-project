@@ -1,6 +1,7 @@
-// Sprint 3: Terraform -> Ansible -> build/test/push.
-// Sprint 4 adds kubectl deploy to EKS and converges the full pipeline
-// (Build -> Infra -> Config -> Deploy -> Monitor).
+// Sprint 4: adds the Deploy stage — updates kubeconfig, installs metrics-server
+// (required for HPA, not included by default on EKS), applies manifests with
+// the just-built image tag, waits for rollout, and smoke-tests the endpoint.
+// Sprint 5 will add monitoring; this is the last stage before that.
 
 pipeline {
     agent any
@@ -38,10 +39,6 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 dir('terraform') {
-                    // -auto-approve is fine here since Plan already ran and
-                    // produced the exact plan file being applied. For a
-                    // stricter setup, add an `input` approval step before
-                    // this instead.
                     sh 'terraform apply -input=false -auto-approve tfplan'
                 }
             }
@@ -49,22 +46,14 @@ pipeline {
 
         stage('Ansible Configure') {
             steps {
-                dir('terraform') {
-                    script {
-                        env.EKS_CLUSTER_NAME = sh(
-                            returnStdout: true,
-                            script: 'terraform output -raw eks_cluster_name'
-                        ).trim()
-                    }
-                }
                 dir('ansible') {
-                    sh """
-                        sudo apt-get update -qq
-                        sudo apt-get install -y ansible
+                    sh '''
+                        which ansible-playbook || sudo apt-get install -y ansible
+                        EKS_CLUSTER=$(cd ../terraform && terraform output -raw eks_cluster_name)
                         ANSIBLE_ROLES_PATH=roles ansible-playbook site.yml \
                             -e aws_region=${AWS_REGION} \
-                            -e eks_cluster_name=${EKS_CLUSTER_NAME}
-                    """
+                            -e eks_cluster_name="${EKS_CLUSTER}"
+                    '''
                 }
             }
         }
@@ -102,15 +91,68 @@ pipeline {
                 """
             }
         }
+
+        stage('Deploy') {
+            steps {
+                dir('terraform') {
+                    sh 'aws eks update-kubeconfig --name $(terraform output -raw eks_cluster_name) --region ${AWS_REGION}'
+                }
+                dir('kubernetes') {
+                    sh '''
+                        # metrics-server is required for HPA and is NOT included by
+                        # default on EKS. Applying it here is idempotent — safe to
+                        # run on every deploy.
+                        kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+                        kubectl apply -f namespace.yaml
+                        kubectl apply -f deployment.yaml
+                        kubectl apply -f service.yaml
+                        kubectl apply -f hpa.yaml
+
+                        # Swap in the image just built and pushed, rather than
+                        # whatever tag is checked into deployment.yaml.
+                        kubectl set image deployment/capstone-app \
+                            capstone-app=${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG} \
+                            -n capstone-app
+
+                        kubectl rollout status deployment/capstone-app -n capstone-app --timeout=180s
+                    '''
+                }
+            }
+        }
+
+        stage('Post-deploy smoke test') {
+            steps {
+                sh '''
+                    SERVICE_HOST=""
+                    for i in $(seq 1 20); do
+                        SERVICE_HOST=$(kubectl get svc capstone-app -n capstone-app \
+                            -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+                        if [ -n "$SERVICE_HOST" ]; then break; fi
+                        echo "Waiting for LoadBalancer hostname... ($i/20)"
+                        sleep 15
+                    done
+
+                    if [ -z "$SERVICE_HOST" ]; then
+                        echo "LoadBalancer hostname not assigned in time"
+                        exit 1
+                    fi
+
+                    echo "Service reachable at http://${SERVICE_HOST}"
+                    # ELB DNS propagation can lag even after the hostname appears
+                    sleep 30
+                    curl -sf --max-time 10 "http://${SERVICE_HOST}/health"
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo "Infra applied and pushed ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
+            echo "Deployed ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG} to EKS"
         }
         failure {
             echo "Build failed — check the stage logs above."
         }
     }
 }
-
