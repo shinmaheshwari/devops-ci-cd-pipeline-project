@@ -8,51 +8,53 @@ Automated pipeline for a Dockerized web app on **AWS EKS**, orchestrated by **Je
 | Documentation | 15% |
 | Cost optimization | 10% |
 
-**Region:** `ap-south-1` · **Requirements source:** [docs/task.md](docs/task.md)
+**Region:** `ap-south-1` · **Requirements:** [docs/task.md](docs/task.md)
 
 ---
 
-## Status and open PR stack
+## Architecture
 
-Sprints **1–4** are on `main`. Sprints **5–6** and final polish are in stacked PRs — merge **in order**:
+```
+Developer --push--> GitHub --webhook/poll--> Jenkins (EC2)
+                                                 |
+        ------------------------------------------------------------------
+        |              |              |              |                 |
+   Test/Build/ECR   Terraform      Ansible        Deploy          Monitoring
+        |          (VPC/EKS/S3)    (host cfg)    (kubectl)      (Prom/Grafana)
+        v                                                            |
+      ECR ----------------------------------------------------> EKS pods
+```
 
-| Step | PR | Branch → base | Scope |
-|------|-----|---------------|--------|
-| 1 | [#3](https://github.com/shinmaheshwari/devops-ci-cd-pipeline-project/pull/3) | `feat/sprint-5-monitoring` → `main` | Sprint 5 — monitoring |
-| 2 | [#4](https://github.com/shinmaheshwari/devops-ci-cd-pipeline-project/pull/4) | `feat/sprint-6-finalization` → `#3` branch | Sprint 6 — docs & validation |
-| 3 | [#7](https://github.com/shinmaheshwari/devops-ci-cd-pipeline-project/pull/7) | `feat/capstone-review-fixes` → `#4` branch | Review-gap fixes |
-| 4 | **Latest** | `feat/readme-finalization` → `#7` branch | README & submission guide |
-
-After each merge, retarget the next PR to `main` if GitHub still shows an old base.
+Network, IAM, and components: [docs/architecture.md](docs/architecture.md).
 
 ---
 
 ## Project goals (task mapping)
 
-| Goal | How this repo delivers it | Primary doc |
-|------|---------------------------|-------------|
-| Architecture (LB, orchestration, monitoring) | VPC, EKS, LB Service, Prometheus/Grafana | [docs/architecture.md](docs/architecture.md) |
-| Terraform (VPC, subnets, EKS, S3 state) | `terraform/` + Jenkins Terraform stages | [docs/terraform.md](docs/terraform.md) |
-| Ansible configuration | `ansible/` after Terraform in pipeline | [docs/ansible.md](docs/ansible.md) |
-| App on EKS (scale, resilience) | `kubernetes/` + HPA + probes | [docs/kubernetes.md](docs/kubernetes.md) |
-| Jenkins CI/CD | `jenkins/Jenkinsfile` | [docs/pipeline.md](docs/pipeline.md) |
-| Prometheus & Grafana | `monitoring/` | [docs/monitoring.md](docs/monitoring.md) |
+| Goal | Delivery | Documentation |
+|------|----------|---------------|
+| Architecture (LB, orchestration, monitoring) | VPC, EKS, LoadBalancer Service, Prometheus/Grafana | [architecture.md](docs/architecture.md) |
+| Terraform (VPC, subnets, EKS, S3 state) | `terraform/` + Jenkins Terraform stages | [terraform.md](docs/terraform.md) |
+| Ansible configuration | `ansible/` runs after Terraform | [ansible.md](docs/ansible.md) |
+| App on EKS (scale, resilience) | `kubernetes/` — probes, HPA | [kubernetes.md](docs/kubernetes.md) |
+| Jenkins CI/CD | [jenkins/Jenkinsfile](jenkins/Jenkinsfile) | [pipeline.md](docs/pipeline.md) |
+| Prometheus & Grafana | `monitoring/` — app + node metrics | [monitoring.md](docs/monitoring.md) |
 
 ---
 
-## Capstone pipeline stages → Jenkins
+## Jenkins pipeline
 
 Single declarative pipeline: [jenkins/Jenkinsfile](jenkins/Jenkinsfile).
 
 | Capstone stage ([task.md](docs/task.md)) | Jenkins stages |
 |------------------------------------------|----------------|
 | **1. Build** | Test → Build image → Push to ECR |
-| **2. Infrastructure** | Terraform Init → Plan → Apply (`terraform validate` on init) |
+| **2. Infrastructure** | Terraform Init → Plan → Apply (includes `terraform validate`) |
 | **3. Configuration** | Ansible Configure |
 | **4. Deployment** | Deploy → Post-deploy smoke test |
 | **5. Test & monitor** | Monitoring → Pipeline validation |
 
-**Triggers:** Git push / SCM poll (`H/15 * * * *`) — see [docs/jenkins-triggers.md](docs/jenkins-triggers.md).
+**Trigger:** Git push or SCM poll every 15 minutes — [jenkins-triggers.md](docs/jenkins-triggers.md).
 
 ```
 Checkout → Terraform → Ansible → Test → Build → ECR → Deploy → Smoke → Monitoring → Validation
@@ -65,72 +67,56 @@ Checkout → Terraform → Ansible → Test → Build → ECR → Deploy → Smo
 ```
 app/           # Flask app, Dockerfile, pytest
 terraform/     # VPC, EKS, S3 backend, IAM
-ansible/       # Playbooks (Jenkins host)
+ansible/       # Playbooks (Jenkins CI host)
 jenkins/       # Jenkinsfile
 kubernetes/    # Deployment, Service, HPA
 monitoring/    # Prometheus, Grafana, kube-state-metrics, node-exporter
-docs/          # Runbooks, sprint logs, task.md
+docs/          # Runbooks, sprint logs, task requirements
 ```
 
 ---
 
-## Sprint progress
+## Sprint summary
 
-| Sprint | Topic | Status on `main` | Log |
-|--------|--------|------------------|-----|
-| 1 | Docker, ECR, Jenkins | ✅ Merged | [docs/sprint-1.md](docs/sprint-1.md) |
-| 2 | Terraform + Jenkins | ✅ Merged | [docs/terraform.md](docs/terraform.md) |
-| 3 | Ansible | ✅ Merged | [docs/ansible.md](docs/ansible.md) |
-| 4 | Deploy to EKS | ✅ Merged | [docs/pipeline.md](docs/pipeline.md) |
-| 5 | Prometheus, Grafana | 🔄 PR #3 | [docs/monitoring.md](docs/monitoring.md) |
-| 6 | E2E docs, automation | 🔄 PR #4 | [docs/sprint-6.md](docs/sprint-6.md) |
+| Sprint | Topic | Log |
+|--------|--------|-----|
+| 1 | Docker, ECR, Jenkins on EC2 | [sprint-1.md](docs/sprint-1.md) |
+| 2 | Terraform + remote state + Jenkins | [terraform.md](docs/terraform.md) |
+| 3 | Ansible after Terraform | [ansible.md](docs/ansible.md) |
+| 4 | Deploy to EKS (LB, HPA, smoke test) | [pipeline.md](docs/pipeline.md) |
+| 5 | Prometheus, Grafana, alerts | [monitoring.md](docs/monitoring.md) |
+| 6 | E2E tests, cost doc, demo script | [sprint-6.md](docs/sprint-6.md) |
 
-Screenshots for submission: [docs/screenshots/README.md](docs/screenshots/README.md) (add PNGs so tables below render on GitHub).
-
-<details>
-<summary>Sprint 1–2 screenshot placeholders</summary>
-
-| Sprint 1 | |
-|----------|---|
-| Jenkins dashboard | ![Jenkins dashboard](docs/screenshots/sprint1-jenkins-dashboard.png) |
-| Pipeline console | ![Jenkins console](docs/screenshots/sprint1-jenkins-console.png) |
-| ECR | ![ECR](docs/screenshots/sprint1-ecr-repo.png) |
-
-| Sprint 2 | |
-|----------|---|
-| kubectl nodes | ![nodes](docs/screenshots/sprint2-kubectl-nodes.png) |
-| EKS console | ![EKS](docs/screenshots/sprint2-eks-cluster.png) |
-
-</details>
+Evidence screenshots: add PNGs per [docs/screenshots/README.md](docs/screenshots/README.md).
 
 ---
 
-## Step-by-step — run the full capstone
+## Step-by-step — run the project
 
 ### Prerequisites
 
-- AWS account with permissions for EKS, ECR, VPC, S3, DynamoDB
-- Jenkins on EC2 (see [docs/sprint-1.md](docs/sprint-1.md)) with **Pipeline from SCM**
-- Job **Script Path:** `jenkins/Jenkinsfile` · **Branch:** `*/main` (or feature branch while reviewing PRs)
-- ECR repo `devops-capstone-app` and Terraform state bucket (see [docs/terraform.md](docs/terraform.md))
+- AWS account (EKS, ECR, VPC, S3, DynamoDB)
+- Jenkins on EC2 with **Pipeline from SCM**, script path `jenkins/Jenkinsfile`, branch `*/main`
+- ECR repository `devops-capstone-app` and Terraform S3 backend (see [terraform.md](docs/terraform.md))
+- Jenkins setup and access: [sprint-1.md](docs/sprint-1.md)
 
-### Step 1 — Local app smoke test
+### 1. Local app
 
 ```bash
 cd app
 docker build -t app:local .
 docker run -p 8080:8080 app:local
 curl http://localhost:8080/health
-pytest -q   # optional, same as Jenkins Test stage
+pytest -q
 ```
 
-### Step 2 — Jenkins pipeline (full E2E)
+### 2. Full pipeline on Jenkins
 
-1. Push to the branch Jenkins watches (or wait for `pollSCM`).
-2. Confirm build runs all stages through **Pipeline validation**.
-3. On failure: check logs; optional `SLACK_WEBHOOK_URL` on job env — [docs/monitoring.md](docs/monitoring.md).
+Push to `main` (or run job manually). Confirm all stages complete through **Pipeline validation**.
 
-### Step 3 — Verify infrastructure (Terraform)
+Optional failure alert: set job env `SLACK_WEBHOOK_URL` — [monitoring.md](docs/monitoring.md).
+
+### 3. Infrastructure
 
 ```bash
 cd terraform && terraform init && terraform validate
@@ -138,9 +124,9 @@ aws eks describe-cluster --name devops-capstone --region ap-south-1 --query clus
 kubectl get nodes
 ```
 
-Details: [docs/terraform.md](docs/terraform.md) · Destroy when idle to save cost.
+Teardown when not in use: `terraform destroy` — [cost-optimization.md](docs/cost-optimization.md).
 
-### Step 4 — Verify application on EKS
+### 4. Application on EKS
 
 ```bash
 kubectl get deploy,svc,hpa -n capstone-app
@@ -149,71 +135,68 @@ curl -sf "http://${APP}/health"
 curl -sf "http://${APP}/metrics" | head
 ```
 
-Details: [docs/kubernetes.md](docs/kubernetes.md) · Rollback: [docs/pipeline.md](docs/pipeline.md).
+Rollback: [pipeline.md](docs/pipeline.md).
 
-### Step 5 — Verify monitoring
+### 5. Monitoring
 
 ```bash
 kubectl get pods -n monitoring
 kubectl get svc grafana -n monitoring
-# Grafana: admin / capstone-dev (dev only) — dashboard "Capstone — App & Cluster"
 ```
 
-Prometheus targets (port-forward 9090): app pods, kube-state-metrics, node-exporter UP.
+Grafana (dev): `admin` / `capstone-dev` — dashboard **Capstone — App & Cluster**.  
+Prometheus targets should include app pods, kube-state-metrics, and node-exporter.
 
-Full checklist: [docs/e2e-testing.md](docs/e2e-testing.md).
+Full checklist: [e2e-testing.md](docs/e2e-testing.md).
 
-### Step 6 — Viva / demo
+### 6. Demo / viva
 
-Follow [docs/demo-script.md](docs/demo-script.md) (5–10 min, all five capstone stages).
+[docs/demo-script.md](docs/demo-script.md) — 5–10 minute walkthrough of all five capstone stages.
 
 ---
 
 ## Documentation index
 
-| If you need… | Read |
-|--------------|------|
-| Official sprint requirements | [docs/task.md](docs/task.md) |
-| Network & IAM overview | [docs/architecture.md](docs/architecture.md) |
-| Jenkins access (SSM, plugins) | [docs/sprint-1.md](docs/sprint-1.md) |
-| Terraform variables, S3 backend, destroy | [docs/terraform.md](docs/terraform.md) |
-| Ansible inventory & roles | [docs/ansible.md](docs/ansible.md) |
-| Deploy stages & lessons learned | [docs/pipeline.md](docs/pipeline.md) |
-| K8s manifests & HPA | [docs/kubernetes.md](docs/kubernetes.md) |
-| Prometheus, Grafana, alerts | [docs/monitoring.md](docs/monitoring.md) |
-| SCM webhook vs poll | [docs/jenkins-triggers.md](docs/jenkins-triggers.md) |
-| E2E test checklist | [docs/e2e-testing.md](docs/e2e-testing.md) |
-| Cost & teardown (**10%**) | [docs/cost-optimization.md](docs/cost-optimization.md) |
-| Sprint 6 sign-off | [docs/sprint-6.md](docs/sprint-6.md) |
-| Screenshot filenames | [docs/screenshots/README.md](docs/screenshots/README.md) |
+| Topic | File |
+|-------|------|
+| Capstone requirements | [docs/task.md](docs/task.md) |
+| Architecture & IAM | [docs/architecture.md](docs/architecture.md) |
+| Jenkins & ECR setup | [docs/sprint-1.md](docs/sprint-1.md) |
+| Terraform & EKS | [docs/terraform.md](docs/terraform.md) |
+| Ansible | [docs/ansible.md](docs/ansible.md) |
+| Deploy pipeline | [docs/pipeline.md](docs/pipeline.md) |
+| Kubernetes manifests | [docs/kubernetes.md](docs/kubernetes.md) |
+| Monitoring & alerts | [docs/monitoring.md](docs/monitoring.md) |
+| Jenkins triggers | [docs/jenkins-triggers.md](docs/jenkins-triggers.md) |
+| End-to-end testing | [docs/e2e-testing.md](docs/e2e-testing.md) |
+| Cost optimization (10%) | [docs/cost-optimization.md](docs/cost-optimization.md) |
+| Production readiness | [docs/sprint-6.md](docs/sprint-6.md) |
+| Screenshot list | [docs/screenshots/README.md](docs/screenshots/README.md) |
 
 ---
 
-## Deliverables checklist (submission)
+## Deliverables (Project 4)
 
-- [ ] End-to-end Jenkins pipeline (all five capstone stages)
-- [ ] Terraform: VPC, EKS, S3 state (Jenkins EC2 documented — [terraform.md](docs/terraform.md#out-of-scope-in-terraform-documented-for-taskmd))
-- [ ] Ansible in pipeline after Terraform
-- [ ] App on EKS with probes and HPA
-- [ ] Prometheus + Grafana + alert rules (+ node metrics via node-exporter)
-- [ ] Docs + cost section + demo script
-- [ ] Screenshots committed under `docs/screenshots/`
-- [ ] One successful full pipeline run on `main` recorded
+- End-to-end Jenkins pipeline — build, Terraform, Ansible, deploy, test, monitoring
+- AWS infrastructure via Terraform — VPC, EKS, S3 state (Jenkins EC2 bootstrap documented in [terraform.md](docs/terraform.md))
+- Ansible configuration management in pipeline
+- Application on EKS with health checks and HPA
+- Prometheus, Grafana, and Prometheus alert rules
+- Documentation, cost guide, and demo script
 
 ---
 
 ## Cost notes
 
-Dev/demo sizing (single NAT, small nodes, destroy EKS between sessions). Full breakdown and viva points: **[docs/cost-optimization.md](docs/cost-optimization.md)**.
+Single NAT, `t3.medium` nodes, destroy EKS between study sessions. Details: [docs/cost-optimization.md](docs/cost-optimization.md).
 
 ---
 
-## Lessons learned (summary)
+## Lessons learned
 
-Documented in sprint logs — highlights:
+- **IAM instance profiles** — Jenkins uses EC2 role, not committed access keys
+- **SSM port-forward** — access Jenkins when corporate network blocks SSH/8080 ([sprint-1.md](docs/sprint-1.md))
+- **EKS IAM** — caller permissions differ from cluster service roles ([terraform.md](docs/terraform.md))
+- **metrics-server** — required on EKS for meaningful HPA CPU metrics ([pipeline.md](docs/pipeline.md))
 
-- **IAM instance profile** on Jenkins (no static AWS keys in git)
-- **SSM / port-forward** when corporate network blocks direct SSH/8080 ([sprint-1.md](docs/sprint-1.md))
-- **EKS caller IAM** vs cluster service role ([terraform.md](docs/terraform.md))
-- **metrics-server** required for HPA on EKS ([pipeline.md](docs/pipeline.md))
-- **Jenkins branch specifier** must match the branch you intend to build ([pipeline.md](docs/pipeline.md))
+More detail in each sprint log under `docs/`.
