@@ -1,6 +1,6 @@
 # Monitoring — Sprint 5
 
-## Status: in progress — manifests added; verify after Jenkins pipeline run
+## Status: implemented — verify targets/alerts after Jenkins run (see [e2e-testing.md](e2e-testing.md))
 
 ## What gets deployed
 
