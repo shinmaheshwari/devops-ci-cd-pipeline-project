@@ -4,7 +4,7 @@ A hands-on capstone building a complete CI/CD pipeline on AWS: containerized app
 Jenkins → Terraform-provisioned EKS → Kubernetes deployment → Prometheus/Grafana
 monitoring, all driven from a single Jenkins pipeline.
 
-**Status:** Sprint 3 in progress (Ansible playbooks added; pending Jenkins pipeline verification). See [Progress](#progress) below.
+**Status:** Sprint 4 complete on `main` (deploy to EKS verified). Sprint 5 (monitoring) in progress. See [Progress](#progress) below.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ Full details in [docs/architecture.md](docs/architecture.md).
 | Image registry | Amazon ECR |
 | Infrastructure as Code | Terraform |
 | Compute | Amazon EKS (Kubernetes) |
-| Config management | Ansible *(Sprint 3)* |
+| Config management | Ansible |
 | Monitoring | Prometheus + Grafana *(Sprint 5)* |
 | Cloud | AWS (`ap-south-1`) |
 
@@ -86,14 +86,24 @@ itself — so infrastructure changes are driven by the same pipeline as app chan
 
 Full log: [docs/terraform.md](docs/terraform.md)
 
-### 🔄 Sprint 3 — Ansible configuration management
+### ✅ Sprint 3 — Ansible configuration management
 
 Ansible playbooks configure the Jenkins EC2 host (Docker, kubectl, kubeconfig) and run automatically after the Terraform stages in the pipeline.
 
 Full log: [docs/ansible.md](docs/ansible.md)
 
-### 🔲 Sprint 4 — CI/CD deploy to EKS
-### 🔲 Sprint 5 — Prometheus, Grafana, alerting
+### ✅ Sprint 4 — CI/CD deploy to EKS
+
+Kubernetes manifests (Deployment, LoadBalancer Service, HPA), Jenkins **Deploy** and **Post-deploy smoke test** stages, metrics-server for HPA, and end-to-end git push → running app on EKS.
+
+Full log: [docs/pipeline.md](docs/pipeline.md)
+
+### 🔄 Sprint 5 — Prometheus, Grafana, alerting
+
+Prometheus + Grafana manifests under `monitoring/`, Jenkins **Monitoring** stage, pod scrape annotations on the app Deployment.
+
+Full log: [docs/monitoring.md](docs/monitoring.md)
+
 ### 🔲 Sprint 6 — Testing, documentation, production readiness
 
 ## Quickstart — running the app locally
