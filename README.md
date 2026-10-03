@@ -119,7 +119,9 @@ Full log: [docs/sprint-6.md](docs/sprint-6.md)
 | Terraform | [docs/terraform.md](docs/terraform.md) |
 | Ansible | [docs/ansible.md](docs/ansible.md) |
 | Deploy pipeline | [docs/pipeline.md](docs/pipeline.md) |
+| Kubernetes manifests | [docs/kubernetes.md](docs/kubernetes.md) |
 | Monitoring | [docs/monitoring.md](docs/monitoring.md) |
+| Submission screenshots | [docs/screenshots/README.md](docs/screenshots/README.md) |
 | E2E testing | [docs/e2e-testing.md](docs/e2e-testing.md) |
 | Cost (10% eval) | [docs/cost-optimization.md](docs/cost-optimization.md) |
 | Viva demo | [docs/demo-script.md](docs/demo-script.md) |

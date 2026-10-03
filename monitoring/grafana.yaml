@@ -46,6 +46,10 @@ spec:
           volumeMounts:
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboards-config
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboard-json
+              mountPath: /etc/grafana/provisioning/dashboards/json
           resources:
             requests:
               cpu: 100m
@@ -57,6 +61,18 @@ spec:
         - name: datasources
           configMap:
             name: grafana-datasources
+        - name: dashboards-config
+          configMap:
+            name: grafana-dashboards-config
+            items:
+              - key: dashboards.yaml
+                path: dashboards.yaml
+        - name: dashboard-json
+          configMap:
+            name: grafana-dashboards-config
+            items:
+              - key: capstone-overview.json
+                path: capstone-overview.json
 ---
 apiVersion: v1
 kind: Service

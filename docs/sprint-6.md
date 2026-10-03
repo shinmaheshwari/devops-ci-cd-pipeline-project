@@ -35,6 +35,7 @@
 
 ## Known limitations
 
-- Jenkins EC2 not managed by Terraform (Sprint 1 bootstrap).
+- Jenkins EC2 not managed by Terraform (Sprint 1 bootstrap) — see [terraform.md](terraform.md#out-of-scope-in-terraform-documented-for-taskmd).
 - Grafana admin password is hard-coded for demo (`monitoring/grafana.yaml`).
-- Alert notifications to Slack/email require Jenkins credentials (documented, not wired).
+- Slack alerts require `SLACK_WEBHOOK_URL` on the Jenkins job (documented in [monitoring.md](monitoring.md)).
+- Submission PNGs: add under [screenshots/README.md](screenshots/README.md).

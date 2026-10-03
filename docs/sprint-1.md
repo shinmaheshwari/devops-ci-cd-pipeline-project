@@ -25,7 +25,8 @@ Docker file-permission bug (see Lessons Learned).
 ## Jenkins setup
 
 - [x] Jenkins reachable at `http://localhost:8080` via SSM port-forward tunnel (see Lessons Learned — direct access is blocked on my network)
-- [x] Plugins installed: Docker Pipeline, Amazon ECR, Pipeline: AWS Steps, Git
+- [x] Plugins installed: **Docker Pipeline**, **Amazon ECR**, **Pipeline: AWS Steps**, **Git**
+- [x] **Kubernetes / EKS access:** `kubectl` + `aws eks update-kubeconfig` on the Jenkins host (Ansible Sprint 3) — satisfies the capstone Kubernetes CLI requirement; optional **Kubernetes** Jenkins plugin for UI cluster credentials
 - [x] AWS credentials configured via IAM instance profile — verified with `aws sts get-caller-identity` as the `jenkins` user, confirmed no static keys needed
 - [x] Pipeline job `capstone-build` created, pointed at `jenkins/Jenkinsfile` via Pipeline script from SCM
 - [x] First pipeline run: build image → push to ECR — successful after two fixes (see Lessons Learned)

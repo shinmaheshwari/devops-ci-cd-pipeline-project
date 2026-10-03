@@ -35,7 +35,7 @@ Developer --push--> GitHub --webhook/poll--> Jenkins (EC2)
 
 | Identity | Scope |
 |---|---|
-| Jenkins EC2 instance role | ECR push/pull, `eks:DescribeCluster` + node/RBAC access to the target cluster, S3 + DynamoDB access scoped to the Terraform state bucket/table, no broad `*` permissions |
+| Jenkins EC2 instance role | ECR push/pull, EKS API access (access entries), Terraform state S3/DynamoDB, EC2/IAM for provisioning — **broad policies in dev** (`IAMFullAccess`, etc.); production would use a narrow Terraform execution role ([terraform.md](terraform.md) lessons learned) |
 | EKS cluster role | Standard AWS-managed EKS cluster policy |
 | EKS node group role | `AmazonEKSWorkerNodePolicy`, `AmazonEKS_CNI_Policy`, `AmazonEC2ContainerRegistryReadOnly` |
 

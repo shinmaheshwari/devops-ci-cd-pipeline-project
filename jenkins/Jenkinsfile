@@ -26,6 +26,7 @@ pipeline {
             steps {
                 dir('terraform') {
                     sh 'terraform init -input=false'
+                    sh 'terraform validate'
                 }
             }
         }
@@ -153,10 +154,14 @@ pipeline {
                 dir('monitoring') {
                     sh '''
                         kubectl apply -f namespace.yaml
+                        kubectl apply -f kube-state-metrics.yaml
+                        kubectl apply -f node-exporter.yaml
                         kubectl apply -f prometheus-rbac.yaml
                         kubectl apply -f prometheus-config.yaml
                         kubectl apply -f prometheus.yaml
+                        kubectl apply -f grafana-dashboards.yaml
                         kubectl apply -f grafana.yaml
+                        kubectl rollout status deployment/kube-state-metrics -n monitoring --timeout=120s
                         kubectl rollout status deployment/prometheus -n monitoring --timeout=120s
                         kubectl rollout status deployment/grafana -n monitoring --timeout=120s
                     '''
@@ -190,6 +195,17 @@ pipeline {
         }
         failure {
             echo "Pipeline failed — check stage logs, kubectl get pods -A, and Grafana/Prometheus in monitoring namespace"
+            script {
+                if (env.SLACK_WEBHOOK_URL?.trim()) {
+                    sh '''
+                        curl -sf -X POST -H "Content-type: application/json" \
+                          --data "{\"text\":\"Capstone pipeline FAILED: ${JOB_NAME} #${BUILD_NUMBER} — ${BUILD_URL}\"}" \
+                          "$SLACK_WEBHOOK_URL" || true
+                    '''
+                } else {
+                    echo 'Optional: set Jenkins job environment SLACK_WEBHOOK_URL for Slack alerts (see docs/monitoring.md)'
+                }
+            }
         }
     }
 }

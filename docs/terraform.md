@@ -10,6 +10,13 @@
 - Managed node group: 2× `t3.medium`, scales 1-3
 - All required IAM roles (cluster role, node role with worker/CNI/ECR-readonly policies)
 
+## Out of scope in Terraform (documented for task.md)
+
+| task.md item | This project |
+|--------------|--------------|
+| **EC2 (Jenkins)** | Bootstrapped manually in Sprint 1 (`i-0adf876798c6081fe`); not imported into Terraform to avoid reprovisioning a working CI server. Could be added via `aws_instance` + `terraform import`. |
+| **Security groups** | Jenkins SG created at EC2 launch (`sg-035635846fd281b71` in [sprint-1.md](sprint-1.md)); EKS creates cluster/node security groups automatically. No standalone `aws_security_group` module — acceptable for demo with documented manual SG. |
+
 ## Remote state backend
 
 - S3 bucket: `devops-capstone-tfstate-562904760755` (versioned, public access blocked)
