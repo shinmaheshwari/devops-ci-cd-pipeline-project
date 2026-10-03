@@ -4,7 +4,7 @@ A hands-on capstone building a complete CI/CD pipeline on AWS: containerized app
 Jenkins → Terraform-provisioned EKS → Kubernetes deployment → Prometheus/Grafana
 monitoring, all driven from a single Jenkins pipeline.
 
-**Status:** Sprint 4 complete on `main` (deploy to EKS verified). Sprint 5 (monitoring) in progress. See [Progress](#progress) below.
+**Status:** Capstone pipeline complete in repo (Sprints 1–6). Merge stacked PRs #3 → #4, then verify one full Jenkins run on `main`. See [Progress](#progress) below.
 
 ## Architecture
 
@@ -38,7 +38,7 @@ Full details in [docs/architecture.md](docs/architecture.md).
 | Infrastructure as Code | Terraform |
 | Compute | Amazon EKS (Kubernetes) |
 | Config management | Ansible |
-| Monitoring | Prometheus + Grafana *(Sprint 5)* |
+| Monitoring | Prometheus + Grafana |
 | Cloud | AWS (`ap-south-1`) |
 
 ## Repository layout
@@ -100,11 +100,30 @@ Full log: [docs/pipeline.md](docs/pipeline.md)
 
 ### 🔄 Sprint 5 — Prometheus, Grafana, alerting
 
-Prometheus + Grafana manifests under `monitoring/`, Jenkins **Monitoring** stage, pod scrape annotations on the app Deployment.
+Prometheus + Grafana manifests under `monitoring/`, Jenkins **Monitoring** stage *(PR #3)*.
 
 Full log: [docs/monitoring.md](docs/monitoring.md)
 
-### 🔲 Sprint 6 — Testing, documentation, production readiness
+### 🔄 Sprint 6 — Testing, documentation, production readiness
+
+E2E test checklist, demo script, cost optimization guide, Jenkins SCM triggers, and **Pipeline validation** stage.
+
+Full log: [docs/sprint-6.md](docs/sprint-6.md)
+
+## Documentation index
+
+| Topic | Doc |
+|-------|-----|
+| Architecture | [docs/architecture.md](docs/architecture.md) |
+| Sprint 1 / Jenkins access | [docs/sprint-1.md](docs/sprint-1.md) |
+| Terraform | [docs/terraform.md](docs/terraform.md) |
+| Ansible | [docs/ansible.md](docs/ansible.md) |
+| Deploy pipeline | [docs/pipeline.md](docs/pipeline.md) |
+| Monitoring | [docs/monitoring.md](docs/monitoring.md) |
+| E2E testing | [docs/e2e-testing.md](docs/e2e-testing.md) |
+| Cost (10% eval) | [docs/cost-optimization.md](docs/cost-optimization.md) |
+| Viva demo | [docs/demo-script.md](docs/demo-script.md) |
+| Jenkins triggers | [docs/jenkins-triggers.md](docs/jenkins-triggers.md) |
 
 ## Quickstart — running the app locally
 
@@ -130,10 +149,9 @@ recommended to `terraform destroy` between work sessions during development.
 
 ## Cost notes
 
-This project is optimized for a dev/demo budget, not production scale — single
-NAT gateway, small node instance types, and a destroy-between-sessions workflow
-for the EKS cluster. See the cost breakdown in
-[docs/terraform.md](docs/terraform.md#estimated-monthly-cost-if-left-running-continuously).
+This project is optimized for a dev/demo budget, not production scale. See
+[docs/cost-optimization.md](docs/cost-optimization.md) for the full breakdown,
+teardown workflow, and viva talking points (10% of capstone evaluation).
 
 ## Notable engineering decisions and lessons learned
 

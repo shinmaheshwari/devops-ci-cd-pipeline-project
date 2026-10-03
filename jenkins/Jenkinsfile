@@ -1,8 +1,12 @@
-// Sprint 4: Deploy + smoke test to EKS.
-// Sprint 5: Monitoring stage (Prometheus + Grafana in monitoring/).
+// Capstone stages: Build | Infra (Terraform) | Config (Ansible) | Deploy | Test & Monitor
+// Sprint 6: pollSCM trigger, Pipeline validation stage, docs in docs/sprint-6.md
 
 pipeline {
     agent any
+
+    triggers {
+        pollSCM('H/15 * * * *')
+    }
 
     environment {
         AWS_REGION   = 'ap-south-1'
@@ -157,6 +161,25 @@ pipeline {
                         kubectl rollout status deployment/grafana -n monitoring --timeout=120s
                     '''
                 }
+            }
+        }
+
+        stage('Pipeline validation') {
+            steps {
+                sh '''
+                    echo "=== capstone-app ==="
+                    kubectl get deploy,svc,hpa -n capstone-app
+                    kubectl wait --for=condition=available deployment/capstone-app \
+                        -n capstone-app --timeout=60s
+
+                    echo "=== monitoring ==="
+                    kubectl get deploy,pods -n monitoring
+
+                    APP_HOST=$(kubectl get svc capstone-app -n capstone-app \
+                        -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                    curl -sf --max-time 10 "http://${APP_HOST}/health"
+                    curl -sf --max-time 10 "http://${APP_HOST}/metrics" | grep -q app_requests_total
+                '''
             }
         }
     }
