@@ -1,50 +1,67 @@
 # Monitoring — Sprint 5
 
-## Status: implemented — verify targets/alerts after Jenkins run (see [e2e-testing.md](e2e-testing.md))
+## Status: implemented — verify targets, dashboard, and alerts after Jenkins run
 
 ## What gets deployed
 
 | Component | Namespace | Purpose |
 |---|---|---|
-| Prometheus | `monitoring` | Scrapes pods with `prometheus.io/*` annotations (capstone-app `/metrics`) |
-| Grafana | `monitoring` | LoadBalancer UI, Prometheus datasource pre-provisioned |
-| Alert rules | Prometheus config | `CapstoneAppDown`, high request rate (demo thresholds) |
+| Prometheus | `monitoring` | Scrapes app pods, kube-state-metrics, node-exporter |
+| kube-state-metrics | `monitoring` | Cluster object metrics (pods ready, deployments, etc.) |
+| node-exporter | `monitoring` | **Node** CPU/memory (DaemonSet on workers) |
+| Grafana | `monitoring` | LoadBalancer UI, datasource + **Capstone — App & Cluster** dashboard |
+| Alert rules | Prometheus config | App down, high request rate, high node CPU |
 
-The Jenkins **Monitoring** stage runs after the post-deploy smoke test and applies `monitoring/*.yaml`.
+The Jenkins **Monitoring** stage applies all `monitoring/*.yaml` files after the app smoke test.
 
-## Access Grafana
+## Grafana dashboard
+
+Provisioned automatically: folder **Capstone** → **Capstone — App & Cluster**
+
+Panels include app scrape up-count, request rate, ready pods (kube-state-metrics), and node CPU %.
 
 ```bash
 kubectl get svc grafana -n monitoring
-# open http://<EXTERNAL-IP>/  — login admin / capstone-dev (dev-only password)
+# http://<EXTERNAL-IP>/ — login admin / capstone-dev (dev-only)
 ```
 
-Or port-forward:
-
-```bash
-kubectl port-forward svc/grafana -n monitoring 3000:80
-# http://localhost:3000
-```
+Screenshot for submission: [docs/screenshots/README.md](screenshots/README.md) (`sprint5-grafana-dashboard.png`).
 
 ## Verify Prometheus targets
 
 ```bash
 kubectl port-forward svc/prometheus -n monitoring 9090:9090
-# http://localhost:9090/targets — capstone-app pods should be UP
+# http://localhost:9090/targets
+# Expect UP: kubernetes-pods (capstone-app), kube-state-metrics, node-exporter
 ```
+
+## Alert runbook
+
+| Alert | Meaning | Test |
+|-------|---------|------|
+| `CapstoneAppDown` | Cannot scrape app pods | `kubectl scale deploy/capstone-app -n capstone-app --replicas=0`, wait 2m, check Prometheus **Alerts** |
+| `CapstoneHighRequestRate` | Demo threshold exceeded | Load-test or lower threshold temporarily |
+| `NodeHighCPU` | Worker CPU > 85% for 10m | Stress node or adjust threshold |
+
+Alerts appear in Prometheus UI (**Alerts** tab). Alertmanager routing is not deployed — add Alertmanager + Slack in a future iteration.
 
 ## Jenkins failure notifications
 
-Pipeline `post { failure { ... } }` logs a reminder to check Grafana/Prometheus. For production, add Email Extension or Slack webhook via Jenkins Credentials (not committed).
+On pipeline **failure**, Jenkins:
+
+1. Logs guidance to check Grafana/Prometheus.
+2. If job environment variable **`SLACK_WEBHOOK_URL`** is set (Incoming Webhook URL), posts a JSON message via `curl`.
+
+Configure in Jenkins → job → Environment variables (do not commit the URL). Alternative: **Email Extension** plugin with `emailext` in `post { failure }`.
 
 ## Definition of done
 
-- [ ] `kubectl get pods -n monitoring` — prometheus and grafana Running
-- [ ] Prometheus targets show capstone-app pods UP
-- [ ] Grafana loads with Prometheus datasource working
-- [ ] Test alert: scale deployment to 0 or break `/metrics`, confirm alert in Prometheus UI
-- [ ] Jenkins failure block documented / optional webhook configured
+- [ ] `kubectl get pods -n monitoring` — prometheus, grafana, kube-state-metrics Running; node-exporter on each node
+- [ ] Prometheus targets: app + kube-state-metrics + node-exporter **UP**
+- [ ] Grafana dashboard **Capstone — App & Cluster** visible
+- [ ] Test alert `CapstoneAppDown` once (scale to 0)
+- [ ] Optional: `SLACK_WEBHOOK_URL` test on failed build
 
 ## Next: Sprint 6
 
-End-to-end test doc, cost section, demo script, full trigger automation.
+See [sprint-6.md](sprint-6.md) and [e2e-testing.md](e2e-testing.md).
