@@ -1,7 +1,5 @@
-// Sprint 4: adds the Deploy stage — updates kubeconfig, installs metrics-server
-// (required for HPA, not included by default on EKS), applies manifests with
-// the just-built image tag, waits for rollout, and smoke-tests the endpoint.
-// Sprint 5 will add monitoring; this is the last stage before that.
+// Sprint 4: Deploy + smoke test to EKS.
+// Sprint 5: Monitoring stage (Prometheus + Grafana in monitoring/).
 
 pipeline {
     agent any
@@ -145,14 +143,30 @@ pipeline {
                 '''
             }
         }
+
+        stage('Monitoring') {
+            steps {
+                dir('monitoring') {
+                    sh '''
+                        kubectl apply -f namespace.yaml
+                        kubectl apply -f prometheus-rbac.yaml
+                        kubectl apply -f prometheus-config.yaml
+                        kubectl apply -f prometheus.yaml
+                        kubectl apply -f grafana.yaml
+                        kubectl rollout status deployment/prometheus -n monitoring --timeout=120s
+                        kubectl rollout status deployment/grafana -n monitoring --timeout=120s
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo "Deployed ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG} to EKS"
+            echo "Deployed ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG} to EKS (monitoring stack applied)"
         }
         failure {
-            echo "Build failed — check the stage logs above."
+            echo "Pipeline failed — check stage logs, kubectl get pods -A, and Grafana/Prometheus in monitoring namespace"
         }
     }
 }
