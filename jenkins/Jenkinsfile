@@ -138,9 +138,17 @@ pipeline {
 
                     echo "Service reachable at http://${SERVICE_HOST}"
                     # ELB DNS propagation can lag even after the hostname appears
-                    sleep 30
-                    curl -sf --max-time 10 "http://${SERVICE_HOST}/health"
-                '''
+                                        sleep 30
+                    for i in $(seq 1 12); do
+                        if curl -sf --max-time 10 "http://${SERVICE_HOST}/health"; then
+                            exit 0
+                        fi
+                        echo "Not reachable yet, retrying... ($i/12)"
+                        sleep 15
+                    done
+                    echo "Smoke test failed: ${SERVICE_HOST} never became reachable"
+                    exit 1
+		    '''
             }
         }
 
