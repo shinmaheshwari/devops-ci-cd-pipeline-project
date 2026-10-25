@@ -1,10 +1,10 @@
 # End-to-End DevOps CI/CD Capstone — Full Project Plan
 
-> Implementation roadmap for Project 4. Requirements source of truth: [task.md](task.md). Sprint checklists: [.cursor/skills/aws-devops-capstone/reference.md](../.cursor/skills/aws-devops-capstone/reference.md).
+> **Archive:** early implementation roadmap. The project is complete — use **[docs/README.md](README.md)** and **[live-demo-guide.md](live-demo-guide.md)** for demo and navigation. Requirements: [task.md](task.md).
 
-## Current state
+## Current state (historical)
 
-The repository is **greenfield**: only requirements and scaffolding exist today.
+The repository was **greenfield** when this plan was written.
 
 | Present | Missing |
 |---------|---------|

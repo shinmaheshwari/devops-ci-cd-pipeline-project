@@ -7,7 +7,7 @@
 | Artifact | Purpose |
 |----------|---------|
 | [e2e-testing.md](e2e-testing.md) | Manual + automated test checklist |
-| [demo-script.md](demo-script.md) | 5–10 min viva walkthrough |
+| [live-demo-guide.md](live-demo-guide.md) | 5–10 min live demo / viva |
 | [cost-optimization.md](cost-optimization.md) | Cost choices (10% evaluation) |
 | [jenkins-triggers.md](jenkins-triggers.md) | SCM poll / webhook guidance |
 | Jenkins **Pipeline validation** stage | Post-deploy cluster + metrics checks |
@@ -15,13 +15,15 @@
 
 ## Capstone pipeline stage mapping
 
+Updated in Sprint 7 — full order: [sprint-7.md](sprint-7.md), [live-demo-guide.md](live-demo-guide.md).
+
 | Capstone stage (task.md) | Jenkins stages |
 |--------------------------|----------------|
-| Build | Test, Build image, Push to ECR |
-| Infrastructure | Terraform Init, Plan, Apply |
+| Build | Test, Build image, Scan image, Push to ECR |
+| Infrastructure | Terraform Init, Plan, Apply (conditional) |
 | Configuration | Ansible Configure |
 | Deployment | Deploy, Post-deploy smoke test |
-| Testing & monitoring | Pipeline validation, Monitoring |
+| Testing & monitoring | Monitoring, Pipeline validation |
 
 ## Definition of done
 

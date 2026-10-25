@@ -1,22 +1,27 @@
 # End-to-end testing
 
-Use this checklist after a full Jenkins pipeline run (or a manual replay of each stage) to confirm the capstone path from **git push → running app → monitoring**.
+Checklist after a full Jenkins run: **git push → ECR → EKS app → monitoring**.
+
+Demo walkthrough: [live-demo-guide.md](live-demo-guide.md).
 
 ## Preconditions
 
-- Jenkins job `capstone-build` uses **Pipeline script from SCM**, branch `*/main` (or your feature branch for stacked PR testing).
-- AWS credentials via Jenkins EC2 **instance profile** (no keys in git).
-- EKS cluster exists (`terraform apply` succeeded in pipeline).
+- Jenkins job `capstone-build`: **Pipeline from SCM**, `jenkins/Jenkinsfile`, branch `*/main`
+- EC2 instance profile (no AWS keys in git)
+- Credential `slack-webhook-url` optional — [monitoring.md](monitoring.md)
 
 ## Automated coverage in Jenkins
 
-| Stage | What is validated |
-|-------|-------------------|
-| Test | `pytest` unit tests (`app/tests/`) |
-| Post-deploy smoke test | Public LoadBalancer `/health` returns 200 |
-| Pipeline validation | Deployments, HPA, monitoring pods, in-cluster `/metrics` |
+| Stage | Validates |
+|-------|-----------|
+| Test | `pytest` (`app/tests/`) |
+| Scan image | Trivy — blocks CRITICAL (see [sprint-7.md](sprint-7.md)) |
+| Push to ECR | Image tagged `BUILD_NUMBER`-`commit` |
+| Terraform Apply | Infra when plan has changes |
+| Post-deploy smoke test | Public LB `/health` |
+| Pipeline validation | Deploy/HPA/monitoring pods; `/metrics` on app |
 
-## Manual verification (recommended for submission evidence)
+## Manual verification
 
 ### 1. Infrastructure
 
@@ -39,34 +44,34 @@ curl -sf "http://${APP_HOST}/metrics" | head
 ```bash
 kubectl get pods -n monitoring
 kubectl port-forward svc/prometheus -n monitoring 9090:9090
-# Browser: http://localhost:9090/targets — capstone-app pods UP
+# Targets: app pods, kube-state-metrics, node-exporter UP
+kubectl port-forward svc/grafana -n monitoring 3000:80
 ```
 
-### 4. Autoscaling signal
+### 4. HPA
 
 ```bash
 kubectl get hpa -n capstone-app
-# CPU should show a percentage (not <unknown>) after metrics-server is installed
 ```
 
-### 5. Rollback drill (optional)
+### 5. Rollback (optional)
 
 ```bash
 kubectl rollout undo deployment/capstone-app -n capstone-app
-kubectl rollout status deployment/capstone-app -n capstone-app
 ```
 
-## Failure scenarios to rehearse
+## Failure scenarios
 
-| Symptom | Likely cause | Doc reference |
-|---------|--------------|---------------|
-| HPA CPU `<unknown>` | metrics-server missing | [pipeline.md](pipeline.md) |
-| Jenkins “success” but old pipeline | Wrong branch specifier | [pipeline.md](pipeline.md) |
-| `kubectl` unauthorized after recreate | EKS access / bootstrap | [terraform.md](terraform.md), EKS `access_config` |
-| Docker permission denied | jenkins not in docker group | [ansible.md](ansible.md) |
+| Symptom | Doc |
+|---------|-----|
+| HPA CPU `<unknown>` | [pipeline.md](pipeline.md) |
+| Wrong pipeline / old image tag | [jenkins.md](jenkins.md) |
+| kubectl unauthorized | [terraform.md](terraform.md) |
+| Trivy / scan failure | [sprint-7.md](sprint-7.md) |
+| Ansible sudo/apt errors | [jenkins.md](jenkins.md), [ansible.md](ansible.md) |
 
-## Definition of done (Sprint 6)
+## Sign-off
 
-- [x] One full pipeline run completes all stages (build #23, started manually; `pollSCM` is configured but a poll-triggered run was not demonstrated)
-- [x] Manual checklist above passes with screenshots or console logs archived
-- [ ] [demo-script.md](demo-script.md) rehearsed once end-to-end
+- [ ] Full pipeline green through **Pipeline validation**
+- [ ] Manual steps above verified
+- [ ] [live-demo-guide.md](live-demo-guide.md) rehearsed once

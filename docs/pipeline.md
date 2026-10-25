@@ -1,24 +1,38 @@
-# Pipeline — Sprint 4
+# Jenkins pipeline — deploy and operations
 
-## Status: complete — verified end-to-end, live app reachable via LoadBalancer
+Deploy-stage detail from Sprint 4, plus the **current full pipeline order** (Sprint 7).
 
-## Stage diagram
+## Full pipeline order (source of truth)
+
+See [sprint-7.md](sprint-7.md) and [jenkins/Jenkinsfile](../jenkins/Jenkinsfile).
 
 ```
-Checkout -> Terraform (Init/Plan/Apply) -> Ansible Configure -> Test -> Build -> Push to ECR -> Deploy -> Smoke test
+Checkout → Test → Build image → Scan image → Push to ECR
+  → Terraform Init → Plan → Apply (only if plan has changes)
+  → Ansible Configure → Deploy → Post-deploy smoke test
+  → Monitoring → Pipeline validation
 ```
 
-## What Deploy does
+**Live demo narrative:** [live-demo-guide.md](live-demo-guide.md).
+
+## Capstone stage mapping
+
+| Capstone stage ([task.md](task.md)) | Jenkins stages |
+|-------------------------------------|----------------|
+| Build | Test, Build image, Scan image, Push to ECR |
+| Infrastructure | Terraform Init, Plan, Apply |
+| Configuration | Ansible Configure |
+| Deployment | Deploy, Post-deploy smoke test |
+| Test & monitor | Monitoring, Pipeline validation |
+
+## What the Deploy stage does
 
 1. `aws eks update-kubeconfig` — points kubectl at the current cluster
-2. Applies `metrics-server` (idempotent) — **not included by default on EKS**,
-   required for HPA to report real CPU numbers instead of `<unknown>`
+2. Applies **metrics-server** (pinned `v0.7.2`) — required for HPA CPU metrics on EKS
 3. Applies `kubernetes/*.yaml` (namespace, deployment, service, hpa)
-4. `kubectl set image` — swaps in the image tag just built/pushed this run,
-   rather than whatever's checked into `deployment.yaml`
-5. `kubectl rollout status` — waits for the rollout to actually finish
-6. Smoke test stage polls for the LoadBalancer hostname (up to 5 min) then
-   curls `/health` through the real public endpoint
+4. `kubectl set image` — image tag from **this** build (`BUILD_NUMBER`-`git sha`)
+5. `kubectl rollout status` — waits for rollout
+6. **Post-deploy smoke test** — polls LoadBalancer hostname, curls `/health`
 
 ## Rollback
 
@@ -27,47 +41,22 @@ kubectl rollout undo deployment/capstone-app -n capstone-app
 kubectl rollout status deployment/capstone-app -n capstone-app
 ```
 
-## Verifying it worked
+## Verify deployment
 
 ```bash
-kubectl get pods -n capstone-app        # both replicas Running, 1/1
-kubectl get hpa -n capstone-app         # cpu: X%/70%, not <unknown>
-kubectl get svc capstone-app -n capstone-app   # LoadBalancer hostname assigned
-curl http://<hostname>/health
+kubectl get pods -n capstone-app
+kubectl get hpa -n capstone-app         # CPU % not <unknown>
+kubectl get svc capstone-app -n capstone-app
+curl -sf "http://<lb-hostname>/health"
 ```
+
+Manifest reference: [kubernetes.md](kubernetes.md).
 
 ## Lessons learned
 
-1. **Metrics Server is not part of default EKS.** HPA will show `<unknown>`
-   for CPU targets indefinitely without it — no error, just silently useless
-   autoscaling. Installing it as an idempotent step inside the Deploy stage
-   (rather than a one-time manual setup step someone has to remember) means
-   it's automatically present on every fresh cluster, including after a
-   destroy/recreate cycle.
+1. **Metrics Server** — not default on EKS; HPA shows `<unknown>` without it.
+2. **Branch Specifier** — must be `*/main` or builds look green but run stale code ([jenkins.md](jenkins.md)).
+3. **EKS access after recreate** — cluster creator permissions; see [terraform.md](terraform.md) and [sprint-7.md](sprint-7.md).
+4. **Smoke test on new LB** — allow DNS/propagation time (retry loop in Jenkinsfile).
 
-2. **A stale Jenkins job Branch Specifier caused several "successful" but
-   wrong builds.** Back in Sprint 3, the job was pointed at `*/sprint3-review`
-   to test that PR branch before merging — and never switched back to
-   `*/main` afterward. Every subsequent build kept quietly rebuilding the old
-   branch, showing `SUCCESS` with the *old* pipeline stages and post-message
-   (`"Infra applied and pushed..."` instead of the new `"Deployed ... to
-   EKS"`), which looked like a real result but was stale. The tell was
-   comparing the commit hash in the image tag against the latest commit on
-   `main` — worth checking that match any time a build's behavior doesn't
-   match what was just pushed.
-
-3. **EKS access entries don't survive `terraform destroy` / recreate**, even
-   for the Jenkins role (which IS managed by Terraform and gets its access
-   entry recreated automatically) — but the *cluster creator's* own access
-   depends on `bootstrap_cluster_creator_admin_permissions`, which wasn't set.
-   This caused the exact same "must be logged in to the server" error twice,
-   on two separate destroy/recreate cycles, before being fixed by adding
-   `bootstrap_cluster_creator_admin_permissions = true` to the cluster's
-   `access_config` block — worth remembering that a fix flagged as a
-   "follow-up, not yet addressed" in one sprint's docs is a real, recurring
-   cost if left unaddressed into the next.
-
-## Next: Sprint 5
-
-Prometheus + Grafana for cluster/app observability, plus Jenkins failure
-notifications.
+Further monitoring and alerts: [monitoring.md](monitoring.md).

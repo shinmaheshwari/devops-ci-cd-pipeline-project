@@ -10,6 +10,8 @@ Automated pipeline for a Dockerized Flask app on **AWS EKS**, orchestrated by **
 
 **Region:** `ap-south-1` · **Requirements:** [docs/task.md](docs/task.md)
 
+**Live demo:** start with **[docs/live-demo-guide.md](docs/live-demo-guide.md)** · **All docs:** [docs/README.md](docs/README.md)
+
 ---
 
 ## Architecture
@@ -189,7 +191,7 @@ Grafana (dev): `admin` / `capstone-dev` — dashboard **Capstone — App & Clust
 
 ### 6. Demo / viva
 
-[docs/demo-script.md](docs/demo-script.md) — walkthrough of all five capstone stages (map Sprint 7 Jenkins order to each stage verbally).
+**[docs/live-demo-guide.md](docs/live-demo-guide.md)** — 5–10 min script (capstone stages + actual Jenkins UI order).
 
 ---
 
@@ -197,6 +199,8 @@ Grafana (dev): `admin` / `capstone-dev` — dashboard **Capstone — App & Clust
 
 | Topic | File |
 |-------|------|
+| **Live demo script** | **[docs/live-demo-guide.md](docs/live-demo-guide.md)** |
+| Doc map & naming | [docs/README.md](docs/README.md) |
 | Capstone requirements | [docs/task.md](docs/task.md) |
 | Architecture & IAM | [docs/architecture.md](docs/architecture.md) |
 | Jenkins server setup & troubleshooting | [docs/jenkins.md](docs/jenkins.md) |
