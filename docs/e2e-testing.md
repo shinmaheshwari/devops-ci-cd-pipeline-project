@@ -2,7 +2,6 @@
 
 Checklist after a full Jenkins run: **git push → ECR → EKS app → monitoring**.
 
-Demo walkthrough: [live-demo-guide.md](live-demo-guide.md).
 
 ## Preconditions
 
@@ -74,4 +73,4 @@ kubectl rollout undo deployment/capstone-app -n capstone-app
 
 - [ ] Full pipeline green through **Pipeline validation**
 - [ ] Manual steps above verified
-- [ ] [live-demo-guide.md](live-demo-guide.md) rehearsed once
+- [ ] Presenter rehearsal (internal demo guide) completed

@@ -7,7 +7,6 @@
 | Artifact | Purpose |
 |----------|---------|
 | [e2e-testing.md](e2e-testing.md) | Manual + automated test checklist |
-| [live-demo-guide.md](live-demo-guide.md) | 5–10 min live demo / viva |
 | [cost-optimization.md](cost-optimization.md) | Cost choices (10% evaluation) |
 | [jenkins-triggers.md](jenkins-triggers.md) | SCM poll / webhook guidance |
 | Jenkins **Pipeline validation** stage | Post-deploy cluster + metrics checks |
@@ -15,7 +14,7 @@
 
 ## Capstone pipeline stage mapping
 
-Updated in Sprint 7 — full order: [sprint-7.md](sprint-7.md), [live-demo-guide.md](live-demo-guide.md).
+Updated in Sprint 7 — full order: [sprint-7.md](sprint-7.md).
 
 | Capstone stage (task.md) | Jenkins stages |
 |--------------------------|----------------|
@@ -32,7 +31,7 @@ Updated in Sprint 7 — full order: [sprint-7.md](sprint-7.md), [live-demo-guide
 - [x] Documentation index updated in README
 - [x] SCM trigger documented + pollSCM in Jenkinsfile
 - [x] Cost optimization document
-- [x] Demo script
+- [x] Presenter script (team: `docs/internal/live-demo-guide.md`)
 - [x] Final full pipeline run captured (build #23, `screenshots/sprint6-final-pipeline.png`)
 
 ## Known limitations

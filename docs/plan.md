@@ -1,6 +1,6 @@
 # End-to-End DevOps CI/CD Capstone — Full Project Plan
 
-> **Archive:** early implementation roadmap. The project is complete — use **[docs/README.md](README.md)** and **[live-demo-guide.md](live-demo-guide.md)** for demo and navigation. Requirements: [task.md](task.md).
+> **Archive:** early implementation roadmap. The project is complete — public index: root **[README.md](../README.md)**; team prep: **[internal/README.md](internal/README.md)**. Requirements: [task.md](task.md).
 
 ## Current state (historical)
 

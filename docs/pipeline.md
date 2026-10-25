@@ -13,8 +13,6 @@ Checkout → Test → Build image → Scan image → Push to ECR
   → Monitoring → Pipeline validation
 ```
 
-**Live demo narrative:** [live-demo-guide.md](live-demo-guide.md).
-
 ## Capstone stage mapping
 
 | Capstone stage ([task.md](task.md)) | Jenkins stages |
