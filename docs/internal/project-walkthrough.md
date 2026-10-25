@@ -65,8 +65,9 @@ Capstone **five stages** map to these blocks — see [live-demo-guide.md](live-d
 
 ## Read order for deep understanding
 
-1. [architecture.md](../architecture.md)
-2. [pipeline.md](../pipeline.md) + [sprint-7.md](../sprint-7.md)
-3. Skim `jenkins/Jenkinsfile`
-4. [monitoring.md](../monitoring.md)
-5. [sprint-6.md](../sprint-6.md) feedback table
+1. [code-and-setup-walkthrough.md](code-and-setup-walkthrough.md) — phased setup with file-level explanation
+2. [architecture.md](../architecture.md)
+3. [pipeline.md](../pipeline.md) + [sprint-7.md](../sprint-7.md)
+4. Skim `jenkins/Jenkinsfile`
+5. [monitoring.md](../monitoring.md)
+6. [sprint-6.md](../sprint-6.md) feedback table

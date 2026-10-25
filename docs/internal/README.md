@@ -5,6 +5,7 @@ Not linked from the root **README** — for install, demo prep, and interview pr
 | Doc | Purpose |
 |-----|---------|
 | [dev-setup-guide.md](dev-setup-guide.md) | Full bootstrap: AWS, Jenkins EC2, ECR, Terraform backend, Jenkins job |
+| [code-and-setup-walkthrough.md](code-and-setup-walkthrough.md) | **Setup order + code**: what each directory/file does and how stages connect |
 | [project-walkthrough.md](project-walkthrough.md) | End-to-end mental model: repos, pipeline, data flow |
 | [live-demo-guide.md](live-demo-guide.md) | 5–10 min presenter script |
 | [interview-qa.md](interview-qa.md) | Common viva / interview questions and answers |

@@ -2,6 +2,8 @@
 
 Step-by-step to reproduce the environment from zero. Public runbooks: [jenkins.md](../jenkins.md), [terraform.md](../terraform.md).
 
+For **why each repo folder exists and how the code fits the pipeline**, read [code-and-setup-walkthrough.md](code-and-setup-walkthrough.md).
+
 ## 1. AWS one-time bootstrap
 
 | Step | Action | Doc |
