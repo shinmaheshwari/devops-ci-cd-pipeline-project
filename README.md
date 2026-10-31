@@ -25,7 +25,7 @@ Diagram and IAM: **[docs/architecture.md](docs/architecture.md)**
 | Architecture (LB, orchestration, monitoring) | VPC, EKS, LoadBalancer, Prometheus/Grafana | [architecture.md](docs/architecture.md) |
 | Terraform (VPC, subnets, EKS, S3 state) | `terraform/` + Jenkins stages | [terraform.md](docs/terraform.md) |
 | Ansible configuration | `ansible/` after Terraform | [ansible.md](docs/ansible.md) |
-| App on EKS (scale, resilience) | `kubernetes/` — probes, HPA | [kubernetes.md](docs/kubernetes.md) |
+| App on EKS (scale, resilience) | `kubernetes/` — probes, HPA (load-tested 2 → 5 pods) | [kubernetes.md](docs/kubernetes.md), [autoscaling-test.md](docs/autoscaling-test.md) |
 | Jenkins CI/CD | [jenkins/Jenkinsfile](jenkins/Jenkinsfile) | [pipeline.md](docs/pipeline.md), [jenkins.md](docs/jenkins.md) |
 | Prometheus & Grafana | `monitoring/` | [monitoring.md](docs/monitoring.md) |
 
@@ -56,7 +56,7 @@ app/           # Flask app, Dockerfile, pytest
 terraform/     # VPC, EKS, S3 backend, IAM
 ansible/       # Playbooks (Jenkins CI host)
 jenkins/       # Jenkinsfile
-kubernetes/    # Deployment, Service, HPA
+kubernetes/    # Deployment, Service, HPA (tests/: manual HPA load test)
 monitoring/    # Prometheus, Grafana, exporters
 docs/          # Runbooks, sprint logs, screenshots
 ```
@@ -126,6 +126,14 @@ docs/          # Runbooks, sprint logs, screenshots
 ![Fail-fast](docs/screenshots/sprint7-fail-fast.png)
 ![App health](docs/screenshots/sprint7-app-health.png)
 
+**Autoscaling test:** under load, CPU reached 113% of the 70% target and the HPA scaled from 2 to the maximum of 5 pods, spread across both availability zones, then returned to 2 after the load stopped. Details: [autoscaling-test.md](docs/autoscaling-test.md).
+
+![HPA before load](docs/screenshots/sprint7-hpa-before.png)
+![HPA scaling up](docs/screenshots/sprint7-hpa-scaling-up.png)
+![Pods scaled to 5](docs/screenshots/sprint7-hpa-pods-scaled.png)
+![Grafana during load test](docs/screenshots/sprint7-grafana-load-test.png)
+![HPA scaled down](docs/screenshots/sprint7-hpa-scaled-down.png)
+
 Index: [docs/screenshots/README.md](docs/screenshots/README.md)
 
 ---
@@ -186,6 +194,7 @@ kubectl port-forward svc/prometheus -n monitoring 9090:9090
 | Ansible | [docs/ansible.md](docs/ansible.md) |
 | Pipeline & deploy | [docs/pipeline.md](docs/pipeline.md) |
 | Kubernetes | [docs/kubernetes.md](docs/kubernetes.md) |
+| Autoscaling test | [docs/autoscaling-test.md](docs/autoscaling-test.md) |
 | Monitoring | [docs/monitoring.md](docs/monitoring.md) |
 | E2E testing | [docs/e2e-testing.md](docs/e2e-testing.md) |
 | Cost (10%) | [docs/cost-optimization.md](docs/cost-optimization.md) |
@@ -197,7 +206,7 @@ kubectl port-forward svc/prometheus -n monitoring 9090:9090
 
 - End-to-end Jenkins pipeline (build/scan, Terraform, Ansible, deploy, monitoring)
 - Terraform-managed VPC, EKS, S3 remote state
-- Ansible in pipeline; app on EKS with HPA and health checks
+- Ansible in pipeline; app on EKS with health checks and an HPA load-tested from 2 to 5 pods
 - Prometheus, Grafana, alert rules; Slack on failure (credential)
 - Documentation, cost analysis, screenshots
 
@@ -205,4 +214,4 @@ kubectl port-forward svc/prometheus -n monitoring 9090:9090
 
 ## Cost & lessons learned
 
-[cost-optimization.md](docs/cost-optimization.md) · IAM instance profiles · SSM access · metrics-server for HPA · Sprint 7 fail-fast/Trivy — see [sprint-7.md](docs/sprint-7.md) and sprint logs in `docs/`.
+[cost-optimization.md](docs/cost-optimization.md) · IAM instance profiles · SSM access · metrics-server for HPA · HPA load test · Sprint 7 fail-fast/Trivy — see [sprint-7.md](docs/sprint-7.md) and sprint logs in `docs/`.

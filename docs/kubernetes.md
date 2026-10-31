@@ -26,6 +26,18 @@ kubectl get hpa -n capstone-app
 
 CPU should show a percentage, not `<unknown>`.
 
+### Load test
+
+A manual load generator lives in `kubernetes/tests/` and is not applied by the pipeline (`kubectl apply -f kubernetes/` does not recurse into subfolders).
+
+```bash
+kubectl apply -f kubernetes/tests/load-generator.yaml
+kubectl get hpa -n capstone-app -w
+kubectl delete -f kubernetes/tests/load-generator.yaml
+```
+
+Result: CPU reached 113% of target and the HPA scaled from 2 to 5 pods, then back to 2 after the ~5-minute stabilisation window. Full results and screenshots: [autoscaling-test.md](autoscaling-test.md).
+
 ## Deploy manually (without Jenkins)
 
 ```bash
