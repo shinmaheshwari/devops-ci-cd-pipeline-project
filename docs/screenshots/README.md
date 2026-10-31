@@ -53,3 +53,6 @@ PNG captures referenced by [README.md](../../README.md). Keep these exact filena
 - `sprint7-hpa-scaled-down.png` — back to 2 replicas after the load stopped
 
 Do not commit secrets in screenshots (webhook URLs, tokens). Crop them out first.
+
+## Cost
+- `cost-explorer-actual.png` — `aws ce get-cost-and-usage` output: usage before credits, by service, and credits applied

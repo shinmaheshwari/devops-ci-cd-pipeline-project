@@ -1,6 +1,6 @@
 # End-to-End DevOps CI/CD Capstone — Full Project Plan
 
-> Implementation roadmap for Project 4. Requirements source of truth: [task.md](task.md). Sprint checklists: [.cursor/skills/aws-devops-capstone/reference.md](../.cursor/skills/aws-devops-capstone/reference.md).
+> Implementation roadmap for Project 4. Requirements source of truth: [task.md](task.md). Sprint checklists: see the sprint logs in this folder.
 
 > **Historical planning document.** This is the roadmap written before implementation started. The "Current state" and "Immediate next steps" sections below describe the starting point, not the finished project. For the final state see [README.md](../README.md) and [architecture.md](architecture.md).
 
@@ -12,7 +12,7 @@ The repository is **greenfield**: only requirements and scaffolding exist today.
 |---------|---------|
 | [docs/task.md](task.md) — sprint requirements | `app/`, `terraform/`, `ansible/`, `jenkins/`, `kubernetes/`, `monitoring/` |
 | [README.md](../README.md) — target layout | AWS resources, Jenkins server, EKS cluster |
-| Cursor skill checklists in [reference.md](../.cursor/skills/aws-devops-capstone/reference.md) | Architecture diagram, runbooks, cost notes |
+| Sprint checklists (kept outside the repo) | Architecture diagram, runbooks, cost notes |
 
 **Evaluation weights:** Implementation 75% · Documentation 15% · Cost optimization 10%.
 
@@ -238,7 +238,7 @@ Add to `.gitignore`: `*.tfstate*`, `.terraform/`, `terraform.tfvars`, kubeconfig
 
 5. **Final E2E test:** Clean branch → full pipeline unattended → app + metrics + alerts verified.
 
-**Definition of done:** All deliverables in [reference.md](../.cursor/skills/aws-devops-capstone/reference.md) checked with evidence.
+**Definition of done:** All deliverables in [task.md](task.md) checked with evidence.
 
 ---
 
@@ -284,7 +284,7 @@ Sprint 1 can bootstrap Jenkins manually before Terraform owns EC2; refactor Jenk
 1. **Share your existing app details:** language/runtime, repo path or URL, port, health endpoint, test command.
 2. **Confirm AWS prerequisites:** account access, preferred region, domain/DNS needs (optional).
 3. **Implement Sprint 1** in order: architecture doc → app integration → ECR → Jenkins → first ECR push job.
-4. **Iterate sprints 2–6** using checklists in [reference.md](../.cursor/skills/aws-devops-capstone/reference.md) as the gate for each sprint.
+4. **Iterate sprints 2–6** using the deliverables in [task.md](task.md) as the gate for each sprint.
 
 ---
 
