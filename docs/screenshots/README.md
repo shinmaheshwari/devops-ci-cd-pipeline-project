@@ -46,5 +46,10 @@ PNG captures referenced by [README.md](../../README.md). Keep these exact filena
 - `sprint7-terraform-import.png` — Jenkins access entry imported into state
 - `sprint7-app-health.png` — `/health` through the load balancer
 - `sprint7-metrics-server-pinned.png` — metrics-server on the pinned `v0.7.2` image
+- `sprint7-hpa-before.png` — `kubectl get hpa,deploy`: 2 replicas, CPU 1% of target
+- `sprint7-hpa-scaling-up.png` — `kubectl get hpa -w` while CPU rises and replicas increase
+- `sprint7-hpa-pods-scaled.png` — `kubectl get pods -o wide` and `kubectl top pods` with 5 replicas
+- `sprint7-grafana-load-test.png` — Grafana dashboard during the load test
+- `sprint7-hpa-scaled-down.png` — back to 2 replicas after the load stopped
 
 Do not commit secrets in screenshots (webhook URLs, tokens). Crop them out first.

@@ -17,6 +17,7 @@ Goal: harden the pipeline after review. Fail fast before touching infrastructure
 | Old Docker images pruned after every build | `jenkins/Jenkinsfile` (`post { always }`) | Keeps the Jenkins host disk from filling up |
 | `jenkins_role_arn` default set to `""` | `terraform/variables.tf` | Jenkins creates the cluster, so EKS already grants it admin as creator; avoids a duplicate access entry |
 | Provider lock hashes for `linux_amd64` and `darwin_arm64` | `terraform/.terraform.lock.hcl` | The lock file must cover every platform that runs Terraform (Jenkins and laptop) |
+| HPA load test (manual) | `kubernetes/tests/load-generator.yaml`, [autoscaling-test.md](autoscaling-test.md) | Proves pod autoscaling works: 2 → 5 pods under load, back to 2 afterwards |
 
 New pipeline order:
 
@@ -55,6 +56,11 @@ With `bootstrap_cluster_creator_admin_permissions = true`, EKS automatically giv
 | ![](screenshots/sprint7-terraform-import.png) | Jenkins access entry imported into state; the follow-up plan shows 1 to add, 1 to change |
 | ![](screenshots/sprint7-app-health.png) | `/health` reachable through the load balancer |
 | ![](screenshots/sprint7-metrics-server-pinned.png) | metrics-server running the pinned `v0.7.2` image |
+| ![](screenshots/sprint7-hpa-before.png) | HPA baseline: 2 replicas, CPU 1% of target |
+| ![](screenshots/sprint7-hpa-scaling-up.png) | HPA scaling 2 → 3 → 4 as CPU reached 113% |
+| ![](screenshots/sprint7-hpa-pods-scaled.png) | 5 replicas running across both nodes |
+| ![](screenshots/sprint7-grafana-load-test.png) | Grafana during the load test |
+| ![](screenshots/sprint7-hpa-scaled-down.png) | Back to 2 replicas after the load stopped |
 
 ## Future scope
 
@@ -62,6 +68,6 @@ With `bootstrap_cluster_creator_admin_permissions = true`, EKS automatically giv
 - Least-privilege IAM: separate Terraform execution role and CI role
 - Alertmanager so Prometheus alert rules notify Slack
 - Persistent volume for Prometheus data
-- Cluster Autoscaler or Karpenter so HPA scale-ups get new nodes
+- Cluster Autoscaler or Karpenter so HPA scale-ups get new nodes (the load test reached 5 pods without Pending pods, but larger loads would need more nodes)
 - AWS Load Balancer Controller with an ALB, Ingress and TLS
 - Manual approval gate before `terraform apply` for production
