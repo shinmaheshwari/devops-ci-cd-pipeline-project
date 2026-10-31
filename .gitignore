@@ -226,3 +226,8 @@ terraform.tfvars
 
 # macOS
 .DS_Store
+
+# Terraform saved plans
+tfplan
+*.tfplan
+.cursor/

@@ -67,3 +67,32 @@ Use AWS Cost Explorer filtered by `Project` to audit spend.
 1. Single NAT is the largest **conscious** HA tradeoff.
 2. Destroy-between-sessions is the main **operational** cost lever for students.
 3. Broad Jenkins IAM was accepted for speed; production would use a dedicated Terraform role with least privilege.
+
+## Actual spend
+
+Figures from AWS Cost Explorer (`aws ce get-cost-and-usage`, record type **Usage**, before credits).
+
+| Period | Usage (before credits) | Credits applied | Net paid | If always on (estimate) |
+|---|---|---|---|---|
+| September 2026 | $58.57 | −$58.57 | $0.00 | ~$210 |
+| October 2026 | $41.07 | −$41.07 | $0.00 | ~$210 |
+| **Total** | **$99.64** | **−$99.64** | **$0.00** | **~$420** |
+
+Usage by service:
+
+| Service | Sep 2026 | Oct 2026 |
+|---|---|---|
+| EC2 compute (Jenkins + EKS worker nodes) | $33.74 | $12.25 |
+| EKS control plane ($0.10/hour) | $10.14 | $16.35 |
+| Elastic Load Balancing | $6.22 | $5.72 |
+| VPC (public IPv4 addresses) | $4.91 | $2.37 |
+| EC2 - Other (EBS volumes, NAT gateway, data transfer) | $3.54 | $4.36 |
+
+What this shows:
+
+- **About 76% below the always-on estimate** ($99.64 vs ~$420 for two months), because the cluster was destroyed between sessions and recreated by the pipeline when needed.
+- **EKS control-plane hours:** ~101 h in September and ~164 h in October (cost ÷ $0.10/hour), compared with ~720 h for a month left running.
+- **EC2 compute fell from $33.74 to $12.25** after the Jenkins instance was stopped when idle.
+- **Net cost $0.00:** all usage was covered by AWS credits.
+
+![Cost Explorer API output (aws ce get-cost-and-usage): usage, by service, and credits](screenshots/cost-explorer-actual.png)
