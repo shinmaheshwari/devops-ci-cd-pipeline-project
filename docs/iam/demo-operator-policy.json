@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Describe*",
+        "ssm:DescribeInstanceInformation",
+        "eks:ListClusters",
+        "elasticloadbalancing:Describe*",
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:StartInstances",
+        "ec2:StopInstances"
+      ],
+      "Resource": "arn:aws:ec2:ap-south-1:562904760755:instance/i-0adf876798c6081fe"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ssm:StartSession",
+      "Resource": [
+        "arn:aws:ec2:ap-south-1:562904760755:instance/i-0adf876798c6081fe",
+        "arn:aws:ssm:ap-south-1::document/AWS-StartPortForwardingSession",
+        "arn:aws:ssm:ap-south-1:562904760755:document/SSM-SessionManagerRunShell"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:TerminateSession",
+        "ssm:ResumeSession"
+      ],
+      "Resource": "arn:aws:ssm:*:*:session/${aws:username}-*"
+    }
+  ]
+}

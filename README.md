@@ -140,6 +140,15 @@ Index: [docs/screenshots/README.md](docs/screenshots/README.md)
 
 ## Quickstart
 
+### Prerequisites
+
+- AWS account with permissions for EKS, ECR, VPC, S3, DynamoDB and IAM
+- Jenkins on EC2 with an instance role; job = Pipeline from SCM (`jenkins/Jenkinsfile`, branch `*/main`)
+- S3 state bucket and DynamoDB lock table (one-time bootstrap, see [terraform.md](docs/terraform.md))
+- ECR repository `devops-capstone-app`
+- Jenkins credential `slack-webhook-url` (optional, for failure alerts)
+- Operator access through SSM Session Manager (AWS CLI v2 + Session Manager plugin); scoped operator policy in [docs/iam/](docs/iam/demo-operator-policy.json)
+
 ### Local app
 
 ```bash
@@ -198,6 +207,7 @@ kubectl port-forward svc/prometheus -n monitoring 9090:9090
 | Monitoring | [docs/monitoring.md](docs/monitoring.md) |
 | E2E testing | [docs/e2e-testing.md](docs/e2e-testing.md) |
 | Cost (10%) | [docs/cost-optimization.md](docs/cost-optimization.md) |
+| Operator IAM policy | [docs/iam/demo-operator-policy.json](docs/iam/demo-operator-policy.json) |
 | Sprint 6 / 7 logs | [docs/sprint-6.md](docs/sprint-6.md), [docs/sprint-7.md](docs/sprint-7.md) |
 
 ---
@@ -214,4 +224,6 @@ kubectl port-forward svc/prometheus -n monitoring 9090:9090
 
 ## Cost & lessons learned
 
-[cost-optimization.md](docs/cost-optimization.md) · IAM instance profiles · SSM access · metrics-server for HPA · HPA load test · Sprint 7 fail-fast/Trivy — see [sprint-7.md](docs/sprint-7.md) and sprint logs in `docs/`.
+**Actual spend:** $99.64 of usage over September–October 2026, against ~$420 if everything had run continuously (about 76% less), fully covered by AWS credits (net $0.00). Savings came from destroying the cluster between sessions and stopping Jenkins when idle. Breakdown and evidence: [cost-optimization.md](docs/cost-optimization.md#actual-spend).
+
+**Lessons learned:** IAM instance profiles instead of stored keys · SSM access instead of public ports · metrics-server for HPA · HPA load test (2 → 5 pods) · Sprint 7 fail-fast pipeline and Trivy gate · recovering from an interrupted `terraform apply` with `terraform import`. Details in [sprint-7.md](docs/sprint-7.md) and the sprint logs in `docs/`.

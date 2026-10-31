@@ -109,3 +109,7 @@ These Jenkins permissions are deliberately broad for a single-user dev project. 
 - **Broad Jenkins IAM** (see above).
 - **Metrics are not persisted.** Prometheus stores data on the pod's own disk with no volume, so a restart loses the history.
 - **Polling plus `terraform apply`:** a poll-triggered build can recreate a destroyed cluster. Disable the Jenkins job while the cluster is down ([cost-optimization.md](cost-optimization.md)).
+
+## Operator access (least privilege)
+
+Team members who run demos use a separate IAM user (`demo-operator`) instead of shared keys. Its policy, [iam/demo-operator-policy.json](iam/demo-operator-policy.json), only allows starting and stopping the Jenkins instance, opening SSM sessions and port-forwards to it, and read-only describe calls. It cannot change infrastructure; Terraform and kubectl run on the Jenkins host under its instance role.
